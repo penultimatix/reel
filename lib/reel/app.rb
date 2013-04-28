@@ -1,5 +1,5 @@
 require 'reel'
-require 'octarine'
+#de require 'octarine'
 
 module Reel
   # Define Reel endpoints using a sinatra-like dsl (provided by octarine)

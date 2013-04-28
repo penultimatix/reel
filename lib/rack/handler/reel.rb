@@ -79,7 +79,6 @@ module Rack
         return @options[:app] if @options[:app]
 
         path = @options[:rackup]
-        ENV['reel.workers'] = @options[:workers]
 
         unless File.exists?(path)
           raise "Missing rackup file '#{path}'"

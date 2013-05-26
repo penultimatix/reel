@@ -6,6 +6,7 @@ gem 'websocket-protocol', github: 'faye/websocket-protocol-ruby', branch: 'maste
 
 gem 'rack', github: 'rack/rack', branch: 'master'
 
+gem 'http_parser.rb', :github => "penultimatix/http_parser.rb", :branch => "master" if defined? JRUBY_VERSION
 gem 'jruby-openssl' if defined? JRUBY_VERSION
 gem 'coveralls', require: false
 

@@ -6,6 +6,8 @@
 [![Code Climate](https://codeclimate.com/github/celluloid/reel.png)](https://codeclimate.com/github/celluloid/reel)
 [![Coverage Status](https://coveralls.io/repos/celluloid/reel/badge.png?branch=master)](https://coveralls.io/r/celluloid/reel)
 
+> "A dizzying lifetime... reeling by on Celluloid" _-- Rush / Between The Wheels_
+
 Reel is a fast, non-blocking "evented" web server built on [http_parser.rb][parser],
 [websocket_parser][websockets], [Celluloid::IO][celluloidio], and [nio4r][nio4r]. Thanks
 to Celluloid, Reel also works great for multithreaded applications and provides
@@ -14,7 +16,7 @@ traditional multithreaded blocking I/O support too.
 [parser]: https://github.com/tmm1/http_parser.rb
 [websockets]: https://github.com/afcapel/websocket_parser
 [celluloidio]: https://github.com/celluloid/celluloid-io
-[nio4r]: https://github.com/tarcieri/nio4r
+[nio4r]: https://github.com/celluloid/nio4r
 
 Connections to Reel can be either non-blocking and handled entirely within
 the Reel::Server thread, or the same connections can be dispatched to worker

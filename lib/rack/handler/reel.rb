@@ -68,6 +68,7 @@ module Rack
         
         File.delete( pidfile ) if pidfile = @options[:pidfile] && File.file?( pidfile )
 
+        ::Reel::Logger.info "Shutting down Reel #{::Reel::VERSION}"
         exit
       end
 

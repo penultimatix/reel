@@ -5,8 +5,8 @@ module Reel
     # How many connections to backlog in the TCP accept queue
     DEFAULT_BACKLOG = 100
 
-    # FIXME: remove respond_to? check after Celluloid 1.0
-    finalizer :finalize if respond_to?(:finalizer)
+    execute_block_on_receiver :initialize
+    finalizer :shutdown
 
     def initialize(host, port, backlog = DEFAULT_BACKLOG, &callback)
       # This is actually an evented Celluloid::IO::TCPServer
@@ -20,9 +20,7 @@ module Reel
 
     end
 
-    execute_block_on_receiver :initialize
-
-    def finalize
+    def shutdown
       @server.close if @server
     end
 
@@ -34,7 +32,7 @@ module Reel
       connection = Connection.new(socket)
       optimize_socket socket
       begin
-        @callback[connection]
+        @callback.call(connection)
       ensure
         if connection.attached?
           connection.close rescue nil

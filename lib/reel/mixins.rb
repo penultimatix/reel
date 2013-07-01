@@ -52,11 +52,15 @@ module Reel
     end
 
     def path
-      @path ||= uri.path
+      uri.path
     end
 
     def query_string
-      @query ||= uri.query
+      uri.query
+    end
+
+    def fragment
+      uri.fragment
     end
 
   end

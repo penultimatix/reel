@@ -35,10 +35,6 @@ module Reel
       headers[header]
     end
 
-    def http_host
-      @http_parser['Host']
-    end
-
     def version
       @http_parser.http_version || HTTPVersionsMixin::DEFAULT_HTTP_VERSION
     end

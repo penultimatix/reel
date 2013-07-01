@@ -32,6 +32,7 @@ module Reel
     end
 
     def_delegators :@connection, :respond, :finish_response, :close, :read
+    def_delegators :@http_parser, :http_host
 
     def initialize(http_parser, connection = nil)
       @http_parser, @connection = http_parser, connection

@@ -18,6 +18,10 @@ module Reel
         !!@headers
       end
 
+      def http_host
+        @headers['Host']
+      end
+
       def http_method
         @parser.http_method
       end

@@ -23,8 +23,4 @@ Gem::Specification.new do |gem|
 
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'rspec'
-<<<<<<< HEAD
-  #de gem.add_development_dependency 'octarine'
-=======
->>>>>>> ede8cb437628dce1aaf789748a4cb5f356ce188a
 end

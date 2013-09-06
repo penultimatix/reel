@@ -20,7 +20,6 @@ module Reel
       end
       alias_method :<<, :add
 
-<<<<<<< HEAD
       def headers?
         !!@headers
       end
@@ -29,8 +28,6 @@ module Reel
         @headers['Host']
       end
 
-=======
->>>>>>> ede8cb437628dce1aaf789748a4cb5f356ce188a
       def http_method
         @parser.http_method
       end

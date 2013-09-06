@@ -41,35 +41,6 @@ module Reel
     def read(length = nil, buffer = nil)
       raise ArgumentError, "negative length #{length} given" if length && length < 0
 
-<<<<<<< HEAD
-      #upgrade = parser.headers[UPGRADE]
-      #if upgrade && upgrade.downcase == WEBSOCKET
-      #  WebSocket.new(parser, connection.socket)
-      #else
-        Request.new(parser, connection)
-      #end
-    end
-
-    def_delegators :@connection, :respond, :finish_response, :close, :read
-    def_delegators :@http_parser, :http_host
-
-    def initialize(http_parser, connection = nil)
-      @http_parser, @connection = http_parser, connection
-      @hijacked = false
-    end
-
-    def hijack
-      @hijacked = true
-      @connection.detach
-      @connection.socket
-    end
-
-    def hijacked?; @hijacked; end
-
-    def body
-      @body ||= begin
-        raise "no connection given" unless @connection
-=======
       return '' if length == 0
       res = buffer.nil? ? '' : buffer.clear
 
@@ -110,7 +81,6 @@ module Reel
 
     # Can the current request be upgraded to a WebSocket?
     def websocket?; @request_info.websocket_request?; end
->>>>>>> ede8cb437628dce1aaf789748a4cb5f356ce188a
 
     # Return a Reel::WebSocket for this request, hijacking the socket from
     # the underlying connection

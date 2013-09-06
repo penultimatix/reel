@@ -122,13 +122,8 @@ module Reel
       # The client disconnected early
       @keepalive = false
     ensure
-<<<<<<< HEAD
       if @keepalive || body.nil?
         reset_request(:header)
-=======
-      if @keepalive
-        reset_request(:ready)
->>>>>>> ede8cb437628dce1aaf789748a4cb5f356ce188a
       else
         @socket.close unless @socket.closed?
         reset_request(:closed)

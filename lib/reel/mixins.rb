@@ -10,25 +10,25 @@ module Reel
 
     # Obtain the IP address of the remote connection
     def remote_ip
-      @socket.peeraddr(false)[3]
+      socket.peeraddr(false)[3]
     end
-    alias_method :remote_addr, :remote_ip
+    alias remote_addr remote_ip
 
     # Obtain the hostname of the remote connection
     def remote_host
       # NOTE: Celluloid::IO does not yet support non-blocking reverse DNS
-      @socket.peeraddr(true)[2]
+      socket.peeraddr(true)[2]
     end
   end
 
   module RequestMixin
 
     def method
-      @http_parser.http_method
+      @request_info.http_method
     end
 
     def headers
-      @http_parser.headers
+      @request_info.headers
     end
 
     def [] header
@@ -36,11 +36,11 @@ module Reel
     end
 
     def version
-      @http_parser.http_version || HTTPVersionsMixin::DEFAULT_HTTP_VERSION
+      @request_info.http_version || HTTPVersionsMixin::DEFAULT_HTTP_VERSION
     end
 
     def url
-      @http_parser.url
+      @request_info.url
     end
 
     def uri

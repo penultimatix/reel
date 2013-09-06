@@ -2,10 +2,16 @@ module Reel
   class Request
     class Parser
       include HTTPVersionsMixin
-      attr_reader :headers
+      attr_reader :socket, :connection
 
-      def initialize
+      def initialize(sock, conn)
         @parser = Http::Parser.new(self)
+        @socket = sock
+        @connection = conn
+        @currently_reading = @currently_responding = nil
+        @pending_reads     = []
+        @pending_responses = []
+
         reset
       end
 
@@ -14,6 +20,7 @@ module Reel
       end
       alias_method :<<, :add
 
+<<<<<<< HEAD
       def headers?
         !!@headers
       end
@@ -22,6 +29,8 @@ module Reel
         @headers['Host']
       end
 
+=======
+>>>>>>> ede8cb437628dce1aaf789748a4cb5f356ce188a
       def http_method
         @parser.http_method
       end
@@ -35,39 +44,55 @@ module Reel
         @parser.request_url
       end
 
-      def finished?; @finished; end
+      def current_request
+        until @currently_responding || @currently_reading
+          readpartial
+        end
+        @currently_responding || @currently_reading
+      end
+
+      def readpartial(size = @connection.buffer_size)
+        bytes = @socket.readpartial(size)
+        @parser << bytes
+      end
 
       #
       # Http::Parser callbacks
       #
-
       def on_headers_complete(headers)
-        @headers = headers
-      end
-
-      def on_body(chunk)
-        if @chunk
-          @chunk << chunk
+        info = RequestInfo.new(http_method, url, http_version, headers)
+        req = Request.new(info, connection)
+        if @currently_reading.nil?
+          @currently_reading = req
         else
-          @chunk = chunk
+          @pending_reads << req
         end
       end
 
-      def chunk
-        if (chunk = @chunk)
-          @chunk = nil
-          chunk
-        end
+      # Send body directly to Reel::Response to be buffered.
+      def on_body(chunk)
+        @currently_reading.fill_buffer(chunk)
       end
 
+      # Mark current request as complete, set this as ready to respond.
       def on_message_complete
-        @finished = true
+        @currently_reading.finish_reading! if @currently_reading.is_a?(Request)
+        if @currently_responding.nil?
+          @currently_responding = @currently_reading
+        else
+          @pending_responses << @currently_reading
+        end
+        @currently_reading = @pending_reads.shift
       end
 
       def reset
-        @finished = false
-        @headers  = nil
-        @chunk    = nil
+        popped = @currently_responding
+        if req = @pending_responses.shift
+          @currently_responding = req
+        elsif @currently_responding
+          @currently_responding = nil
+        end
+        popped
       end
     end
   end

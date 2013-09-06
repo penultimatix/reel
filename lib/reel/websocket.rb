@@ -7,10 +7,12 @@ module Reel
     include ConnectionMixin
     include RequestMixin
 
+    attr_reader :socket
     def_delegators :@socket, :addr, :peeraddr
 
-    def initialize(http_parser, socket)
-      @http_parser, @socket = http_parser, socket
+    def initialize(info, socket)
+      @request_info = info
+      @socket = socket
 
       handshake = ::WebSocket::ClientHandshake.new(:get, url, headers)
 

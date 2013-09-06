@@ -5,24 +5,43 @@ module Reel
     extend Forwardable
     include RequestMixin
 
-    UPGRADE   = 'Upgrade'.freeze
-    WEBSOCKET = 'websocket'.freeze
+    def_delegators :@connection, :<<, :write, :remote_addr, :respond, :finish_response
+    attr_reader :body
 
-    # Array#include? seems slow compared to Hash lookup
-    request_methods = Http::METHODS.map { |m| m.to_s.upcase }
-    REQUEST_METHODS = Hash[request_methods.zip(request_methods)].freeze
+    # request_info is a RequestInfo object including the headers and
+    # the url, method and http version.
+    #
+    # Access it through the RequestMixin methods.
+    def initialize(request_info, connection = nil)
+      @request_info  = request_info
+      @connection    = connection
+      @finished      = false
+      @buffer        = ""
+      @body          = RequestBody.new(self)
+      @finished_read = false
+      @websocket     = nil
+    end
 
-    def self.read(connection)
-      parser = connection.parser
+    # Returns true if request fully finished reading
+    def finished_reading?; @finished_read; end
 
-      begin
-        data = connection.socket.readpartial(Connection::BUFFER_SIZE)
-        parser << data
-      end until parser.headers
+    # When HTTP Parser marks the message parsing as complete, this will be set.
+    def finish_reading!
+      raise StateError, "already finished" if @finished_read
+      @finished_read = true
+    end
 
-      REQUEST_METHODS[parser.http_method] ||
-        raise(ArgumentError, "Unknown Request Method: %s" % parser.http_method)
+    # Fill the request buffer with data as it becomes available
+    def fill_buffer(chunk)
+      @buffer << chunk
+    end
 
+    # Read a number of bytes, looping until they are available or until
+    # readpartial returns nil, indicating there are no more bytes to read
+    def read(length = nil, buffer = nil)
+      raise ArgumentError, "negative length #{length} given" if length && length < 0
+
+<<<<<<< HEAD
       #upgrade = parser.headers[UPGRADE]
       #if upgrade && upgrade.downcase == WEBSOCKET
       #  WebSocket.new(parser, connection.socket)
@@ -50,16 +69,55 @@ module Reel
     def body
       @body ||= begin
         raise "no connection given" unless @connection
+=======
+      return '' if length == 0
+      res = buffer.nil? ? '' : buffer.clear
 
-        body = "" unless block_given?
-        while (chunk = @connection.readpartial)
-          if block_given?
-            yield chunk
-          else
-            body << chunk
-          end
+      chunk_size = length.nil? ? @connection.buffer_size : length
+      begin
+        while chunk_size > 0
+          chunk = readpartial(chunk_size)
+          break unless chunk
+          res << chunk
+          chunk_size = length - res.length unless length.nil?
         end
-        body unless block_given?
+      rescue EOFError
+      end
+      return length && res.length == 0 ? nil : res
+    end
+
+    # Read a string up to the given number of bytes, blocking until some
+    # data is available but returning immediately if some data is available
+    def readpartial(length = nil)
+      if length.nil? && @buffer.length > 0
+        slice = @buffer
+        @buffer = ""
+      else
+        unless finished_reading? || (length && length <= @buffer.length)
+          @connection.readpartial(length ? length - @buffer.length : Connection::BUFFER_SIZE)
+        end
+
+        if length
+          slice = @buffer.slice!(0, length)
+        else
+          slice = @buffer
+          @buffer = ""
+        end
+      end
+
+      slice && slice.length == 0 ? nil : slice
+    end
+
+    # Can the current request be upgraded to a WebSocket?
+    def websocket?; @request_info.websocket_request?; end
+>>>>>>> ede8cb437628dce1aaf789748a4cb5f356ce188a
+
+    # Return a Reel::WebSocket for this request, hijacking the socket from
+    # the underlying connection
+    def websocket
+      @websocket ||= begin
+        raise StateError, "can't upgrade this request to a websocket" unless websocket?
+        WebSocket.new(@request_info, @connection.hijack_socket)
       end
     end
   end

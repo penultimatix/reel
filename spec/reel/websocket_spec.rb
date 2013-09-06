@@ -10,10 +10,23 @@ describe Reel::WebSocket do
     with_socket_pair do |client, connection|
       client << handshake.to_data
 
-      websocket = connection.request
+      request = connection.request
+      request.should be_websocket
+
+      websocket = request.websocket
       websocket.should be_a Reel::WebSocket
 
       handshake.errors.should be_empty
+    end
+  end
+
+  it "raises an error if trying to close a connection upgraded to socket" do
+    with_socket_pair do |client, connection|
+      client << handshake.to_data
+
+      websocket = connection.request.websocket
+      websocket.should be_a Reel::WebSocket
+      expect { connection.close }.to raise_error(Reel::Connection::StateError)
     end
   end
 
@@ -65,13 +78,15 @@ describe Reel::WebSocket do
   it "raises a RequestError when connection used after it was upgraded" do
     with_socket_pair do |client, connection|
       client << handshake.to_data
-      
+
       remote_host = connection.remote_host
 
-      websocket = connection.request
+      request = connection.request
+      request.should be_websocket
+      websocket = request.websocket
       websocket.should be_a Reel::WebSocket
 
-      lambda { connection.remote_host }.should raise_error(Reel::RequestError)
+      expect { connection.remote_host }.to raise_error(Reel::Connection::StateError)
       websocket.remote_host.should == remote_host
     end
   end
@@ -79,7 +94,10 @@ describe Reel::WebSocket do
   def with_websocket_pair
     with_socket_pair do |client, connection|
       client << handshake.to_data
-      websocket = connection.request
+      request = connection.request
+
+      request.should be_websocket
+      websocket = request.websocket
       websocket.should be_a Reel::WebSocket
 
       # Discard handshake

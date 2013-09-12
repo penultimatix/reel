@@ -11,12 +11,13 @@ module Reel
       ssl_context = OpenSSL::SSL::SSLContext.new
       ssl_context.cert = OpenSSL::X509::Certificate.new options.fetch(:cert)
       ssl_context.key  = OpenSSL::PKey::RSA.new options.fetch(:key)
-      ssl_context.cert_store.set_default_paths
+      #de ssl_context.cert_store.set_default_paths
+      _de "SSL Context: #{ssl_context.inspect}"
 
       # FIXME: VERY VERY VERY VERY BAD RELEASE BLOCKER BAD
-      ssl_context.verify_mode = SSL::VERIFY_PEER | SSL::VERIFY_FAIL_IF_NO_PEER_CERT #de OpenSSL::SSL::VERIFY_NONE
+      ssl_context.verify_mode = OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT #de OpenSSL::SSL::VERIFY_NONE
 
-      @tcpserver  = Celluloid::IO::TCPServer.new(host, port)
+      @tcpserver = Celluloid::IO::TCPServer.new(host, port)
       @server = Celluloid::IO::SSLServer.new(@tcpserver, ssl_context)
       @server.listen(backlog)
       @callback = callback

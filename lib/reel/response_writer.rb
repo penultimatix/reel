@@ -34,7 +34,7 @@ module Reel
             @socket << response.body
           when IO
             begin
-              if defined?( JRUBY_VERSION ) && JRUBY_VERSION <= "1.6.7"
+              if defined?( JRUBY_VERSION ) #de && JRUBY_VERSION <= "1.6.7"
                 # JRuby 1.6.7 doesn't support IO.copy_stream :(
                 while data = response.body.read(4096)
                   @socket << data
@@ -44,8 +44,7 @@ module Reel
                 # FIXME: should use Celluloid::IO.copy_stream and allow these
                 # calls to be multiplexed through Celluloid::IO's reactor
                 # Until then we need a thread for each of these responses
-
-                Celluloid.defer { IO.copy_stream(response.body, @socket.to_io) }
+                Celluloid.defer { ::IO.copy_stream(response.body, @socket.to_io) }
               end
             ensure
               response.body.close

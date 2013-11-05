@@ -40,7 +40,7 @@ module Reel
     end
 
     def readpartial(size = @buffer_size)
-      raise StateError, "can't read in the '#{@request_state}' request state" unless @request_state == :ready
+      raise Reel::StateError, "can't read in the '#{@request_state}' request state" unless @request_state == :ready
       @parser.readpartial(size)
     end
 
@@ -50,7 +50,7 @@ module Reel
 
     # Read a request object from the connection
     def request
-      raise StateError, "already processing a request" if current_request
+      raise Reel::StateError, "already processing a request" if current_request
 
       req = @parser.current_request
       @request_state = :ready
@@ -81,7 +81,7 @@ module Reel
     # Send a response back to the client
     # Response can be a symbol indicating the status code or a Reel::Response
     def respond(response, headers_or_body = {}, body = nil)
-      raise StateError, "not in header state" if @response_state != :header
+      raise Reel::StateError, "not in header state" if @response_state != :header
 
       if headers_or_body.is_a? Hash
         headers = headers_or_body
@@ -123,21 +123,21 @@ module Reel
 
     # Write body chunks directly to the connection
     def write(chunk)
-      raise StateError, "not in chunked body mode" unless @response_state == :chunked_body
+      raise Reel::StateError, "not in chunked body mode" unless @response_state == :chunked_body
       @writer.write(chunk)
     end
     alias_method :<<, :write
 
     # Finish the response and reset the response state to header
     def finish_response
-      raise StateError, "not in body state" if @response_state != :chunked_body
+      raise Reel::StateError, "not in body state" if @response_state != :chunked_body
       @writer.finish_response
       @response_state = :header
     end
 
     # Close the connection
     def close
-      raise StateError, "socket has been hijacked from this connection" unless @socket
+      raise Reel::StateError, "socket has been hijacked from this connection" unless @socket
 
       @keepalive = false
       @socket.close unless @socket.closed?
@@ -148,7 +148,7 @@ module Reel
       # FIXME: this doesn't do a great job of ensuring we can hijack the socket
       # in its current state. Improve the state detection.
       if @request_state != :ready && @response_state != :header
-        raise StateError, "connection is not in a hijackable state"
+        raise Reel::StateError, "connection is not in a hijackable state"
       end
 
       @request_state = @response_state = :hijacked
@@ -159,7 +159,7 @@ module Reel
 
     # Raw access to the underlying socket
     def socket
-      raise StateError, "socket has already been hijacked" unless @socket
+      raise Reel::StateError, "socket has already been hijacked" unless @socket
       @socket
     end
 

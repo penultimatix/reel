@@ -32,6 +32,7 @@ module Reel
           when String
             @socket << response.body
           when IO
+            _de "There is IO!", true
             begin
               if defined?( JRUBY_VERSION ) && JRUBY_VERSION <= "1.6.7"
                 # JRuby 1.6.7 doesn't support IO.copy_stream :(
@@ -43,7 +44,8 @@ module Reel
                 # FIXME: should use Celluloid::IO.copy_stream and allow these
                 # calls to be multiplexed through Celluloid::IO's reactor
                 # Until then we need a thread for each of these responses
-                Celluloid.defer { IO.copy_stream(response.body, @socket.to_io) }
+                #de Celluloid.defer { IO.copy_stream( response.body, @socket.to_io ) }
+                Celluloid::IO.copy_stream( response.body, @socket )
                 # @socket currently not being converted to appropriate IO object automatically.
                 # Convert the object in advance to still enjoy IO.copy_stream coverage.
               end

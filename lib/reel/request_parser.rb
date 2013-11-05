@@ -44,7 +44,7 @@ module Reel
 
       def current_request
         until @currently_responding || @currently_reading
-          readpartial
+            readpartial
         end
         @currently_responding || @currently_reading
       end
@@ -82,19 +82,16 @@ module Reel
         else
           @currently_responding = @currently_reading
         end
-
         @currently_reading = @pending_reads.shift
       end
 
       def reset
         popped = @currently_responding
-
         if req = @pending_responses.shift
           @currently_responding = req
         elsif @currently_responding
           @currently_responding = nil
         end
-
         popped
       end
     end

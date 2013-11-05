@@ -1,3 +1,5 @@
+require 'reel/request'
+
 module Reel
   # A connection to the HTTP server
   class Connection
@@ -9,7 +11,8 @@ module Reel
     KEEP_ALIVE         = 'Keep-Alive'.freeze
     CLOSE              = 'close'.freeze
 
-    attr_reader :socket, :parser
+    attr_reader   :socket, :parser, :current_request
+    attr_accessor :request_state, :response_state
 
     # Attempt to read this much data
     BUFFER_SIZE = 16384
@@ -21,7 +24,7 @@ module Reel
       @keepalive   = true
       @buffer_size = buffer_size || BUFFER_SIZE
       @parser      = Request::Parser.new(self)
-      @writer      = Response::Writer.new(socket)
+      @request_fsm = Request::StateMachine.new(@socket)
 
       reset_request
       @response_state = :header
@@ -40,12 +43,10 @@ module Reel
     end
 
     def readpartial(size = @buffer_size)
-      raise Reel::StateError, "can't read in the '#{@request_state}' request state" unless @request_state == :ready
+      unless @request_fsm.state == :headers || @request_fsm.state == :body
+        raise StateError, "can't read in the '#{@request_fsm.state}' request state"
+      end
       @parser.readpartial(size)
-    end
-
-    def current_request
-      @current_request
     end
 
     # Read a request object from the connection
@@ -53,14 +54,13 @@ module Reel
       raise Reel::StateError, "already processing a request" if current_request
 
       req = @parser.current_request
-      @request_state = :ready
+      @request_fsm.transition :headers
       @keepalive = false if req[CONNECTION] == CLOSE || req.version == HTTP_VERSION_1_0
       @current_request = req
 
       req
     rescue IOError, Errno::ECONNRESET, Errno::EPIPE
-      # The client is disconnected
-      @request_state = :closed
+      @request_fsm.transition :closed
       @keepalive = false
       nil
     end
@@ -103,22 +103,30 @@ module Reel
       else raise TypeError, "invalid response: #{response.inspect}"
       end
 
-      @writer.handle_response(response)
+      current_request.handle_response(response)
 
       # Enable streaming mode
       if response.chunked? and response.body.nil?
         @response_state = :chunked_body
       end
+<<<<<<< HEAD
     rescue IOError, Errno::ECONNRESET, Errno::EPIPE
       # The client disconnected early
       @keepalive = false
     ensure
       if @keepalive || body.nil?
         reset_request(:header)
+=======
+
+      if @keepalive
+        reset_request
+>>>>>>> 9c6fe166d2f9b8344a28877bd769086108972c3a
       else
-        @socket.close unless @socket.closed?
-        reset_request(:closed)
+        @current_request = nil
+        @parser.reset
+        @request_fsm.transition :closed
       end
+<<<<<<< HEAD
     end
 
     # Write body chunks directly to the connection
@@ -133,6 +141,12 @@ module Reel
       raise Reel::StateError, "not in body state" if @response_state != :chunked_body
       @writer.finish_response
       @response_state = :header
+=======
+    rescue IOError, Errno::ECONNRESET, Errno::EPIPE
+      # The client disconnected early
+      @keepalive = false
+      @request_fsm.transition :closed
+>>>>>>> 9c6fe166d2f9b8344a28877bd769086108972c3a
     end
 
     # Close the connection
@@ -147,11 +161,17 @@ module Reel
     def hijack_socket
       # FIXME: this doesn't do a great job of ensuring we can hijack the socket
       # in its current state. Improve the state detection.
+<<<<<<< HEAD
       if @request_state != :ready && @response_state != :header
         raise Reel::StateError, "connection is not in a hijackable state"
+=======
+      if @request_fsm != :ready && @response_state != :header
+        raise StateError, "connection is not in a hijackable state"
+>>>>>>> 9c6fe166d2f9b8344a28877bd769086108972c3a
       end
 
-      @request_state = @response_state = :hijacked
+      @request_fsm.transition :hijacked
+      @response_state = :hijacked
       socket  = @socket
       @socket = nil
       socket
@@ -164,8 +184,8 @@ module Reel
     end
 
     # Reset the current request state
-    def reset_request(state = :ready)
-      @request_state = state
+    def reset_request
+      @request_fsm.transition :headers
       @current_request = nil
       @parser.reset
     end

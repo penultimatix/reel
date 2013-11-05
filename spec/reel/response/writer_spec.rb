@@ -1,8 +1,9 @@
 require 'spec_helper'
 
 describe Reel::Response::Writer do
-  let(:fixture_path) { File.expand_path("../../fixtures/example.txt", __FILE__) }
+  let(:fixture_path) { File.expand_path("../../../fixtures/example.txt", __FILE__) }
   let(:expected_response) { "HTTP/1.1 200 OK\r\nContent-Length: 56\r\n\r\n#{File.read(fixture_path)}" }
+
   it "streams static files" do
     with_socket_pair do |socket, peer|
       writer = described_class.new(socket)
@@ -12,7 +13,14 @@ describe Reel::Response::Writer do
         writer.handle_response(response)
       end
 
-      peer.readpartial(4096).should eq expected_response
+      buf = ""
+      begin
+        buf << peer.readpartial(4096)
+      rescue IOError
+        # End of body!
+      end
+
+      expect(buf).to eq expected_response
     end
   end
 end

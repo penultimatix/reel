@@ -5,6 +5,7 @@ module Reel
   # For HTTPS support, use Reel::SSLServer
   class Server
     include Celluloid::IO
+    include SocketMixin
 
     # How many connections to backlog in the TCP accept queue
     DEFAULT_BACKLOG = 100
@@ -27,16 +28,17 @@ module Reel
       # This is actually an evented Celluloid::IO::TCPServer
 
       @server = TCPServer.new(host, port)
-      @server.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
+      optimize_socket @server
+      #de @server.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
       @server.listen(backlog)
       @callback = callback
       async.run
 
       # TODO: Catch Errno::EADDRINUSE and kill overall process, even if supervised.
-
     end
 
     def shutdown
+      deoptimize_socket @server
       @server.close if @server
     end
 
@@ -51,7 +53,7 @@ module Reel
       end
 
       connection = Connection.new(socket)
-      optimize_socket socket
+
       begin
         @callback.call(connection)
       ensure
@@ -60,29 +62,8 @@ module Reel
         end
       end
     rescue RequestError, EOFError
-      deoptimize_socket
       # Client disconnected prematurely
       # TODO: log this?
-    end
-
-    if RUBY_PLATFORM =~ /linux/
-      def optimize_socket(socket)
-        if socket.kind_of? TCPSocket
-          socket.setsockopt( Socket::IPPROTO_TCP, :TCP_NODELAY, 1 )
-          socket.setsockopt( Socket::IPPROTO_TCP, 3, 1 ) # TCP_CORK
-          socket.setsockopt( Socket::SOL_SOCKET, Socket::SO_REUSEADDR, 1 )
-        end
-      end
-
-      def deoptimize_socket(socket)
-        socket.setsockopt(6, 3, 0) if socket.kind_of? TCPSocket
-      end
-    else
-      def optimize_socket(socket)
-      end
-
-      def deoptimize_socket(socket)
-      end
     end
   end
 end

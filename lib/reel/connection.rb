@@ -104,11 +104,7 @@ module Reel
       else raise TypeError, "invalid response: #{response.inspect}"
       end
 
-      if current_request
-        current_request.handle_response(response)
-      else
-        raise RequestError
-      end
+      current_request.handle_response(response)
 
       # Enable streaming mode
       if response.chunked? and response.body.nil?
@@ -120,8 +116,8 @@ module Reel
         @parser.reset
         @request_fsm.transition :closed
       end
-    rescue IOError, Errno::ECONNRESET, Errno::EPIPE, RequestError
-      # The client disconnected early, or there is no request
+    rescue IOError, Errno::ECONNRESET, Errno::EPIPE
+      # The client disconnected early
       @keepalive = false
       @request_fsm.transition :closed
     end
@@ -162,5 +158,13 @@ module Reel
       @parser.reset
     end
     private :reset_request
+
+    # Set response state for the connection.
+    def response_state=(state)
+      if state == :header
+        reset_request
+      end
+      @response_state = state
+    end
   end
 end

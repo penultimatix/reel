@@ -10,8 +10,12 @@ require 'reel/connection'
 require 'reel/logger'
 require 'reel/request'
 require 'reel/response'
+
 require 'reel/server'
-require 'reel/ssl_server'
+require 'reel/server/http'
+require 'reel/server/ssl'
+require 'reel/server/unix'
+
 require 'reel/websocket'
 require 'reel/stream'
 

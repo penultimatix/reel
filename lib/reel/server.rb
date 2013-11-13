@@ -13,6 +13,9 @@ module Reel
 
   class Server
     include Celluloid::IO
+      
+    execute_block_on_receiver :initialize
+
     # How many connections to backlog in the TCP accept queue
     DEFAULT_BACKLOG = 100
 

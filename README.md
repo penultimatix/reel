@@ -7,10 +7,11 @@
 
 > "A dizzying lifetime... reeling by on celluloid" _-- Rush / Between The Wheels_
 
-Reel is a fast, non-blocking "evented" web server built on [http_parser.rb][parser],
-[websocket_parser][websockets], [Celluloid::IO][celluloidio], and [nio4r][nio4r]. Thanks
-to Celluloid, Reel also works great for multithreaded applications and provides
-traditional multithreaded blocking I/O support too.
+Reel is a fast, non-blocking "evented" web server
+built on [http_parser.rb][parser], [websocket_parser][websockets],
+[Celluloid::IO][celluloidio], and [nio4r][nio4r]. Thanks to Celluloid,
+Reel also works great for multithreaded applications
+and provides traditional multithreaded blocking I/O support too.
 
 [parser]: https://github.com/tmm1/http_parser.rb
 [websockets]: https://github.com/afcapel/websocket_parser
@@ -18,12 +19,13 @@ traditional multithreaded blocking I/O support too.
 [nio4r]: https://github.com/celluloid/nio4r
 
 Connections to Reel can be either non-blocking and handled entirely within
-the Reel::Server thread ( handling HTTP, SSL, or UNIX sockets ),
-or the same connections can be dispatched to worker
-threads where they will perform ordinary blocking IO. Reel provides no
-built-in thread pool, however you can build one yourself using Celluloid.pool,
-or because Celluloid already pools threads to begin with, you can simply use
-an actor per connection.
+the Reel::Server thread (handling HTTP, SSL, or UNIX sockets),
+or the same connections can be dispatched to worker threads
+where they will perform ordinary blocking IO.
+Reel provides no built-in thread pool,
+however you can build one yourself using Celluloid.pool,
+or because Celluloid already pools threads to begin with,
+you can simply use an actor per connection.
 
 This gives you the best of both worlds: non-blocking I/O for when you're
 primarily I/O bound, and threads for where you're compute bound.

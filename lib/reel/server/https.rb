@@ -1,27 +1,29 @@
 module Reel
   class Server
-    class SSL < Server
+    class HTTPS < Server
 
       # Create a new Reel HTTPS server
       #
       # @param [String] host address to bind to
       # @param [Fixnum] port to bind to
       # @option options [Fixnum] backlog of requests to accept
-      # @option options [String] :cert the server's SSL certificate
-      # @option options [String] :key  the server's SSL key
+      # @option options [String] :cert the server's TLS certificate
+      # @option options [String] :key  the server's TLS key
+      # @option options [Array]  :extra_cert_chain TLS certificate chain
       #
-      # @return [Reel::Server::SSL] Reel HTTPS server actor
+      # @return [Reel::Server::HTTPS] Reel HTTPS server actor
       def initialize(host, port, options={}, &callback)
 
         # Ideally we can encapsulate this rather than making Ruby OpenSSL a
         # mandatory part of the Reel API. It would be nice to support
         # alternatives (e.g. Puma's MiniSSL)
-        ssl_context = OpenSSL::SSL::SSLContext.new
+        ssl_context      = OpenSSL::SSL::SSLContext.new
         ssl_context.cert = OpenSSL::X509::Certificate.new options.fetch(:cert)
-        ssl_context.key = OpenSSL::PKey::RSA.new options.fetch(:key)
+        ssl_context.key  = OpenSSL::PKey::RSA.new options.fetch(:key)
 
-        ssl_context.ca_file = options[:ca_file]
-        ssl_context.ca_path = options[:ca_path]
+        ssl_context.ca_file          = options[:ca_file]
+        ssl_context.ca_path          = options[:ca_path]
+        ssl_context.extra_chain_cert = options[:extra_chain_cert]
 
         # if verify_mode isn't explicitly set, verify peers if we've
         # been provided CA information that would enable us to do so

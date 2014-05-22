@@ -4,10 +4,13 @@ module Reel
     class Body
       include Enumerable
 
+      attr_accessor :multipart
+
       def initialize(request)
         @request   = request
         @streaming = nil
         @contents  = nil
+        multipart? self
       end
 
       # Read exactly the given amount of data
@@ -32,6 +35,8 @@ module Reel
       # Eagerly consume the entire body as a string
       def to_str
         return @contents if @contents
+        return '' if multipart?
+
         raise StateError, "body is being streamed" unless @streaming.nil?
 
         begin

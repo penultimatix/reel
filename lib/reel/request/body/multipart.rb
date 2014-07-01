@@ -3,6 +3,9 @@ require 'multipart_parser/reader'
 
 module Reel
   class Request
+  	
+    extend Forwardable
+    def_delegators :@body, :multipart?
 
   	def multipart
   		@body.multipart.decoded
@@ -16,13 +19,14 @@ module Reel
 	    	return @multipart.is_a? Body::Multipart if body.nil? or !@multipart.nil?
 				boundary = MultipartParser::Reader.extract_boundary_value @request.headers[CONTENT_TYPE]
 				@multipart = Body::Multipart.new body, boundary if boundary
-				_de "boundary: #{boundary}"
 				return @multipart.is_a? Body::Multipart
 			rescue => ex
 				@multipart = false
 	    end
 
 	    class Multipart
+
+	    	Part = MultipartParser::Reader::Part
 
 		    extend Forwardable
 
@@ -37,7 +41,7 @@ module Reel
 
 		      @reader.on_part do |part|
 		        part_entry = { :part => part, :data => '', :ended => false }
-		        parts[part.name] = part_entry
+		        @parts[part.name] = part_entry
 		        part.on_data do |data|
 		          part_entry[:data] << data
 		        end
@@ -49,22 +53,18 @@ module Reel
 
 	      def decoded
 	      	return @parts if @parts.any?
+	        return @parts if @ended
 
-		      #take the decoded, multipart body hash
-		      def decoded
-		        return @parts if @ended
-
-		        begin
-		          @body.each { |chunk|
-		          	write chunk
-		          }
-		        rescue
-		          @parts = {}
-		          raise
-		        end
-						
-						@parts #de unless not ended
-		      end
+	        begin
+	          @body.each { |chunk|
+	          	write chunk
+	          }
+	        rescue
+	          @parts = {}
+	          raise
+	        end
+					
+					@parts
 	      end
 
 	    end

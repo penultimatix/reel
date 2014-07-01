@@ -14,7 +14,6 @@ module Reel
     extend Forwardable
     include RequestMixin
 
-    def_delegators :@body, :multipart, :multipart?
     def_delegators :@connection, :remote_addr, :respond
     def_delegator  :@response_writer, :handle_response
     attr_reader :body

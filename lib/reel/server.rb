@@ -2,14 +2,14 @@ module Reel
   # Base class for Reel servers.
   #
   # This class is a Celluloid::IO actor which provides a barebones server
-  # which does not open a socket itself, it just begin handling connections once
-  # initialized with a specific kind of protocol-based server.
+  # which does not open a socket itself, it just begin handling connections
+  # once initialized with a specific kind of protocol-based server.
 
   # For specific protocol support, use:
 
   # Reel::Server::HTTP
   # Reel::Server::HTTPS
-  # Coming soon: Reel::Server::UNIX
+  # Reel::Server::UNIX ( not on jRuby yet )
 
   class Server
     include Celluloid::IO
@@ -29,6 +29,15 @@ module Reel
       @server       = server
       @buffer_size  = options.fetch :buffer_size, nil
 
+      @options[:rescue] ||= []
+      @options[:rescue] += [
+        Errno::ECONNRESET,
+        Errno::EPIPE,
+        Errno::EINPROGRESS,
+        Errno::ETIMEDOUT,
+        Errno::EHOSTUNREACH
+      ]
+
       @server.listen(options.fetch(:backlog, DEFAULT_BACKLOG))
 
       async.run
@@ -39,13 +48,15 @@ module Reel
     end
 
     def run
-      loop { async.handle_connection @server.accept }
-    end
-
-    def optimize(socket)
-      if socket.is_a? TCPSocket
-        socket.setsockopt(Socket::IPPROTO_TCP, :TCP_NODELAY, 1)
-      end
+      loop {
+        begin
+          socket = @server.accept
+        rescue *@options[:rescue] => ex
+          Logger.warn "Error accepting socket: #{ex.class}: #{ex.to_s}"
+          next
+        end
+        async.handle_connection socket
+      }
     end
 
     def handle_connection(socket)

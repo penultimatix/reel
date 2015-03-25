@@ -1,8 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'celluloid',    		github: 'celluloid/celluloid'
-gem 'celluloid-io', 		github: 'celluloid/celluloid-io'
-gem 'http',         		github: 'tarcieri/http'
+gem 'celluloid'
+gem 'celluloid-io'
+gem 'http'
 
 gem 'multipart-parser',	github: 'penultimatix/multipart-parser'
 

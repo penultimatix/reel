@@ -27,36 +27,24 @@ module Reel
 
         # if verify_mode isn't explicitly set, verify peers if we've
         # been provided CA information that would enable us to do so
-        ssl_context.verify_mode = case
-        when options.include?(:verify_mode)
+        ssl_context.verify_mode = if options.include?(:verify_mode)
           options[:verify_mode]
-        when options.include?(:ca_file)
+        elsif options.include?(:ca_file)
           OpenSSL::SSL::VERIFY_PEER
-        when options.include?(:ca_path)
+        elsif options.include?(:ca_path)
           OpenSSL::SSL::VERIFY_PEER
         else
           OpenSSL::SSL::VERIFY_NONE
         end
 
-        optimize @tcpserver = Celluloid::IO::TCPServer.new(host, port)
+        @tcpserver = Celluloid::IO::TCPServer.new(host, port)
 
         server = Celluloid::IO::SSLServer.new(@tcpserver, ssl_context)
         options.merge!(host: host, port: port)
 
+        options[:rescue] = [ OpenSSL::SSL::SSLError ]
+        
         super(server, options, &callback)
-      end
-
-      def run
-        loop do
-          begin
-            socket = @server.accept
-          rescue OpenSSL::SSL::SSLError => ex
-            Logger.warn "Error accepting SSLSocket: #{ex.class}: #{ex.to_s}"
-            retry
-          end
-
-          async.handle_connection socket
-        end
       end
     end
   end

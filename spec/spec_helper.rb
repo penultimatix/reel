@@ -5,14 +5,21 @@ require 'bundler/setup'
 require 'reel'
 require 'pry'
 
-require 'support/example_request'
-
-logfile = File.open(File.expand_path("../../log/test.log", __FILE__), 'a')
-Celluloid.logger = Logger.new(logfile)
-
 def fixture_dir
   Pathname.new File.expand_path("../fixtures", __FILE__)
 end
+
+def certs_dir
+  Pathname.new File.expand_path('../../tmp/certs', __FILE__)
+end
+
+require 'support/example_request'
+require 'support/create_certs'
+
+RSpec.configure(&:disable_monkey_patching!)
+
+logfile = File.open(File.expand_path("../../log/test.log", __FILE__), 'a')
+Celluloid.logger = Logger.new(logfile)
 
 def example_addr; '127.0.0.1'; end
 def example_port; 1234; end
@@ -61,7 +68,22 @@ module WebSocketHelpers
         }
       end
 
+      let :case_handshake_headers do
+        {
+          "HoSt"                   => example_host,
+          "UpgRAde"                => "websocket",
+          "ConnECTion"             => "Upgrade",
+          "Sec-WebsOCket-Key"      => "dGhlIHNhbXBsZSBub25jZQ==",
+          "Origin"                 => "http://example.com",
+          "Sec-WEBsOCKET-pROTOCol" => "chat, superchat",
+          "Sec-WEBsOCKET-vERsion"  => "13"
+        }
+      end
+
       let(:handshake) { WebSocket::ClientHandshake.new(:get, example_url, handshake_headers) }
+      let(:case_handshake) do
+        WebSocket::ClientHandshake.new(:get, example_url, case_handshake_headers)
+      end
     end
   end
 end

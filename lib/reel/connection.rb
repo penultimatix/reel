@@ -56,7 +56,7 @@ module Reel
 
       req = @parser.current_request
       @request_fsm.transition :headers
-      @keepalive = false if req[CONNECTION] == CLOSE || req.version == HTTP_VERSION_1_0
+      @keepalive = false if req.nil? || req[CONNECTION] == CLOSE || req.version == HTTP_VERSION_1_0
       @current_request = req
 
       req
@@ -120,10 +120,12 @@ module Reel
         @parser.reset
         @request_fsm.transition :closed
       end
-    rescue IOError, Errno::ECONNRESET, Errno::EPIPE, RequestError
+    rescue IOError, SystemCallError, RequestError
       # The client disconnected early, or there is no request
       @keepalive = false
       @request_fsm.transition :closed
+      @parser.reset
+      @current_request = nil
     end
 
     # Close the connection

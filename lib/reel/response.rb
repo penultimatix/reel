@@ -2,9 +2,8 @@ require 'http/headers'
 
 module Reel
   class Response
-    CONTENT_LENGTH     = 'Content-Length'.freeze
-    TRANSFER_ENCODING  = 'Transfer-Encoding'.freeze
-    CHUNKED            = 'chunked'.freeze
+
+    include HeadersMixin
 
     # Use status code tables from the HTTP gem
     STATUS_CODES          = HTTP::Response::STATUS_CODES

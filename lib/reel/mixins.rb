@@ -62,4 +62,13 @@ module Reel
 
   end
 
+  module HeadersMixin
+
+    CONTENT_TYPE       = 'Content-Type'.freeze
+    CONTENT_LENGTH     = 'Content-Length'.freeze
+    TRANSFER_ENCODING  = 'Transfer-Encoding'.freeze
+    CHUNKED            = 'chunked'.freeze
+
+  end
+
 end

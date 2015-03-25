@@ -1,6 +1,8 @@
 require 'forwardable'
 
 require 'reel/request/body'
+require 'reel/request/body/multipart'
+
 require 'reel/request/info'
 require 'reel/request/parser'
 require 'reel/request/state_machine'

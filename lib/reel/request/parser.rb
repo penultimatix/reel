@@ -2,6 +2,7 @@ module Reel
   class Request
     class Parser
       include HTTPVersionsMixin
+      include HeadersMixin
       attr_reader :socket, :connection
 
       def initialize(connection)

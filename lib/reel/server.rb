@@ -23,10 +23,11 @@ module Reel
     finalizer :shutdown
 
     def initialize(server, options={}, &callback)
-      @spy      = STDOUT if options[:spy]
-      @options  = options
-      @callback = callback
-      @server   = server
+      @spy          = STDOUT if options[:spy]
+      @options      = options
+      @callback     = callback
+      @server       = server
+      @buffer_size  = options.fetch :buffer_size, nil
 
       @server.listen(options.fetch(:backlog, DEFAULT_BACKLOG))
 
@@ -53,7 +54,7 @@ module Reel
         socket = Reel::Spy.new(socket, @spy)
       end
 
-      connection = Connection.new(socket)
+      connection = Connection.new(socket, @buffer_size)
 
       begin
         @callback.call(connection)

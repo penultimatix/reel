@@ -18,7 +18,7 @@ module Reel
     BUFFER_SIZE = 16384
     attr_reader :buffer_size
 
-    def initialize(socket, buffer_size = nil)
+    def initialize(socket, buffer_size=nil)
       @attached    = true
       @socket      = socket
       @keepalive   = true

@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
   gem.version       = Reel::VERSION
 
   gem.add_runtime_dependency 'multipart-parser', '>= 0.1.1'
-  gem.add_runtime_dependency 'celluloid-io', '>= 0.16.5'
+  gem.add_runtime_dependency 'celluloid-io', '>= 0.16.5.pre0'
 
   gem.add_runtime_dependency 'http', '>= 0.6.0.pre'
   gem.add_runtime_dependency 'http_parser.rb', '>= 0.6.0'
